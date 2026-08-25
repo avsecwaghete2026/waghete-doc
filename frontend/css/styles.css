@@ -1,0 +1,1360 @@
+/* =====================================================================
+   Design tokens
+   - Single accent (indigo) for primary actions and active states.
+   - Slate neutrals for text/borders so it reads as an internal tool,
+     not a marketing site.
+   - Small set of status colors: admin=indigo, viewer=slate, danger=rose,
+     success=emerald. Used sparingly so the page doesn't feel busy.
+   ===================================================================== */
+:root {
+  --c-bg:           #f5f6fa;
+  --c-surface:      #ffffff;
+  --c-surface-alt:  #f8fafc;
+  --c-border:       #e5e7eb;
+  --c-border-soft:  #eef0f4;
+  --c-text:         #0f172a;
+  --c-text-muted:   #64748b;
+  --c-text-soft:    #94a3b8;
+
+  --c-primary:      #4f46e5;       /* indigo-600 */
+  --c-primary-hover:#4338ca;       /* indigo-700 */
+  --c-primary-soft: #eef2ff;       /* indigo-50 */
+  --c-primary-ring: rgba(79, 70, 229, 0.18);
+
+  --c-admin-bg:     #eef2ff;
+  --c-admin-fg:     #4338ca;
+  --c-viewer-bg:    #f1f5f9;
+  --c-viewer-fg:    #475569;
+  --c-danger-bg:    #fef2f2;
+  --c-danger-fg:    #b91c1c;
+  --c-danger-border:#fecaca;
+  --c-success-bg:   #ecfdf5;
+  --c-success-fg:   #047857;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Min tap target. Apple's HIG and Material both recommend ~44–48px. */
+  --tap-min: 44px;
+
+  /* Sidebar width. When collapsed, the column drops to 0 so the
+     sidebar is fully out of the layout — only the floating hamburger
+     remains visible. */
+  --sidebar-w:        220px;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  color: var(--c-text);
+  background:
+    radial-gradient(1200px 600px at -10% -20%, rgba(79, 70, 229, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 110% 0%, rgba(14, 165, 233, 0.05), transparent 60%),
+    var(--c-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { margin: 0 0 0.5rem; color: var(--c-text); }
+h2 { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
+.muted { color: var(--c-text-muted); }
+.small { font-size: 12px; }
+.center { text-align: center; }
+.error { color: var(--c-danger-fg); margin: 0.5rem 0 0; font-size: 13px; }
+.loading { color: var(--c-text-muted); font-style: italic; }
+.hidden { display: none !important; }
+
+/* =====================================================================
+   App shell: sidebar (left, hidden when collapsed) + main content
+   The hamburger button is a sibling of the sidebar inside .app-shell,
+   positioned in the top-left so it stays visible regardless of state.
+   ===================================================================== */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+/* When collapsed, the sidebar takes 0 width — fully out of the flow,
+   so only the floating hamburger remains visible. */
+.app-shell:has(.sidebar.collapsed) {
+  grid-template-columns: 0 1fr;
+}
+
+main {
+  padding: 1.75rem 1.5rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0; /* prevent grid blowout from wide tables */
+}
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.15s ease-out; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.view-header { margin-bottom: 1.25rem; }
+.view-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.15rem;
+}
+.view-header p { margin: 0; }
+
+/* =====================================================================
+   Sidebar
+   - Full-width when expanded; completely hidden (width 0) when
+     collapsed. The hamburger (outside the sidebar) stays in place.
+   - Brand row at the top (logo only, no text), nav in the middle,
+     user block pinned bottom.
+   ===================================================================== */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  overflow: hidden;
+  transition: width 0.2s ease, border-color 0.2s ease;
+  width: var(--sidebar-w);
+}
+/* Collapsed sidebar: take no width, drop the border. The toggle button
+   outside the sidebar remains visible. */
+.sidebar.collapsed {
+  width: 0;
+  border-right: 0;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid var(--c-border-soft);
+  flex-shrink: 0;
+  min-height: var(--tap-min);
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 44px; /* room for the floating hamburger that overlays the brand row */
+}
+.nav-logo { height: 32px; width: auto; display: block; flex-shrink: 0; }
+
+/* Floating hamburger — fixed in the top-left of the viewport, ALWAYS
+   visible (even when the sidebar is hidden). Clicking it toggles the
+   sidebar via the .collapsed class. */
+.sidebar-toggle {
+  position: fixed;
+  top: 0.65rem;
+  left: 0.65rem;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: var(--c-surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--c-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-toggle:hover { background: var(--c-surface-alt); color: var(--c-text); }
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+/* Sidebar tabs = same .tab class from the old navbar, restyled vertical. */
+.sidebar-nav .tab {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.6rem 0.75rem;
+  gap: 0.7rem;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+}
+
+/* Sidebar user block: avatar + text side-by-side on desktop, full-width
+   logout button on its own row below. */
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.75rem;
+  border-top: 1px solid var(--c-border-soft);
+  flex-shrink: 0;
+  background: var(--c-surface-alt);
+  overflow: hidden;
+}
+.sidebar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  overflow: hidden;
+}
+.sidebar-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-user-email {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.sidebar-user .badge { align-self: flex-start; }
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--c-border);
+  flex-shrink: 0;
+}
+.sidebar-logout {
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--c-text);
+  font-weight: 500;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: var(--tap-min);
+  width: 100%;
+  justify-content: flex-start;
+}
+.sidebar-logout:hover { background: var(--c-surface-alt); border-color: #cbd5e1; }
+
+/* =====================================================================
+   Tabs (used in sidebar)
+   ===================================================================== */
+.tab {
+  border: 0;
+  background: transparent;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s, background 0.15s;
+  min-height: var(--tap-min);
+}
+.tab svg { flex-shrink: 0; opacity: 0.7; }
+.tab:hover { color: var(--c-text); background: var(--c-surface-alt); }
+.tab.active {
+  color: var(--c-primary);
+  background: var(--c-primary-soft);
+}
+.tab.active svg { opacity: 1; }
+
+/* =====================================================================
+   Toast / snackbar notifications
+   ===================================================================== */
+#toast-container {
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--c-border-soft);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+  max-width: 340px;
+  animation: toastIn 0.2s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  pointer-events: auto;
+}
+.toast.toast-out {
+  animation: toastOut 0.2s ease-in forwards;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(6px) scale(0.97); }
+}
+.toast svg { flex-shrink: 0; }
+.toast-success { border-left: 3px solid var(--c-success-fg); }
+.toast-success svg { color: var(--c-success-fg); }
+.toast-error   { border-left: 3px solid var(--c-danger-fg); }
+.toast-error svg   { color: var(--c-danger-fg); }
+.toast-info    { border-left: 3px solid var(--c-primary); }
+.toast-info svg    { color: var(--c-primary); }
+
+/* Role badges — used in the sidebar and on user rows */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--c-viewer-bg);
+  color: var(--c-viewer-fg);
+}
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+.badge.admin  { background: var(--c-admin-bg);  color: var(--c-admin-fg); }
+.badge.viewer { background: var(--c-viewer-bg); color: var(--c-viewer-fg); }
+
+/* =====================================================================
+   Auth (login / reset-password pages)
+   ===================================================================== */
+.auth-body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(800px 500px at 50% 0%, rgba(79, 70, 229, 0.12), transparent 70%),
+    var(--c-bg);
+}
+.auth-card {
+  width: min(400px, 100%);
+  padding: 2.25rem 2rem;
+  background: var(--c-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--c-border-soft);
+}
+.auth-card .auth-logo {
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 1rem;
+}
+.auth-card h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
+.auth-card > .muted { margin-top: -0.25rem; margin-bottom: 1.25rem; }
+.auth-footer {
+  text-align: center;
+  margin-top: 1.25rem;
+}
+.auth-footer a {
+  color: var(--c-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-footer a:hover { text-decoration: underline; }
+
+/* Form row: label on the left, small inline action (link) on the right.
+   Used in the login form for the Password label + Forgot password? link. */
+.form-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+/* When .form-row wraps a form <label>, neutralize the default label
+   margin so the row is the spacing unit. */
+.form-row label { margin: 0; }
+.form-row-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.form-row-link:hover { text-decoration: underline; }
+
+/* Form actions: right-aligned row for the primary submit button.
+   .form-actions-between splits the row so the first child hugs the
+   left edge and the last child hugs the right edge — used when a
+   "Back" link sits next to the "Send" button. */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  gap: 0.75rem;
+}
+.form-actions-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+.form-actions form button { margin-top: 0; }
+
+/* Text button: looks like a link but has button-sized tap target.
+   Used for "Back to sign in" alongside a primary button. */
+.text-btn {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  text-decoration: none;
+  padding: 0.5rem 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+}
+.text-btn:hover { color: var(--c-text); text-decoration: underline; }
+
+/* =====================================================================
+   Forms
+   ===================================================================== */
+form label {
+  display: block;
+  margin-top: 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--c-text-muted);
+  text-transform: uppercase;
+}
+form input, form select, form button, .tab {
+  font: inherit;
+  margin-top: 0.35rem;
+}
+form input, form select,
+.search-bar input, .search-bar select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  /* 16px prevents iOS Safari from auto-zooming on focus. */
+  font-size: 16px;
+  min-height: var(--tap-min);
+}
+form input:focus, form select:focus,
+.search-bar input:focus, .search-bar select:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-ring);
+}
+form input::placeholder { color: var(--c-text-soft); }
+
+/* Primary button */
+form button {
+  margin-top: 1.25rem;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--c-primary);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+  min-height: var(--tap-min);
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+form button:hover { background: var(--c-primary-hover); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3); }
+form button:active { transform: translateY(1px); }
+form button:disabled { background: #c7d2fe; box-shadow: none; cursor: not-allowed; color: inherit; }
+
+/* Spinner for loading buttons */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  margin-right: 6px;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.inline-form { display: flex; gap: 0.5rem; align-items: center; }
+.inline-form input { flex: 1; }
+
+/* =====================================================================
+   Search bar
+   ===================================================================== */
+.search-bar {
+  display: grid;
+  /* Two rows: filters on row 1, sort on row 2 wide. Keeps the sort
+     dropdown prominent without crowding the filters. */
+  grid-template-columns: 2.2fr 1.1fr 1.5fr 1fr 1fr;
+  grid-template-areas:
+    "q      cat    tag     from    to"
+    "sort   sort   sort    sort    sort";
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.search-bar label:nth-child(1) { grid-area: q; }
+.search-bar label:nth-child(2) { grid-area: cat; }
+.search-bar label:nth-child(3) { grid-area: tag; }
+.search-bar label:nth-child(4) { grid-area: from; }
+.search-bar label:nth-child(5) { grid-area: to; }
+.search-bar label:nth-child(6) { grid-area: sort; }
+.search-bar label:nth-child(6) { margin-top: 0; }
+
+/* Search bar labels: same uppercase muted style as form labels */
+.search-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+@media (max-width: 900px) {
+  .search-bar {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "q      q"
+      "cat    tag"
+      "from   to"
+      "sort   sort";
+  }
+}
+@media (max-width: 500px) {
+  .search-bar { grid-template-columns: 1fr; grid-template-areas: "q" "cat" "tag" "from" "to" "sort"; }
+}
+
+.results-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0.25rem;
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+/* =====================================================================
+   Results table
+   ===================================================================== */
+.results {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border-soft);
+  table-layout: auto;
+}
+.results th, .results td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--c-border-soft);
+  vertical-align: middle;
+}
+.results thead th {
+  background: var(--c-surface-alt);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+.results tbody tr:last-child td { border-bottom: 0; }
+.results tbody tr:hover { background: #fafbff; }
+
+/* Whole-row click target for opening doc detail */
+tr.doc-row { cursor: pointer; }
+tr.doc-row:hover .title-link { color: var(--c-primary); }
+
+.results td.title-cell {
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 3px 3px 0;
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.category-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  color: var(--c-text-muted);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.actions { display: flex; gap: 0.4rem; }
+.icon-btn {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-text);
+  transition: background 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.icon-btn:hover { background: var(--c-surface-alt); border-color: #cbd5e1; }
+.icon-btn.primary {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+.icon-btn.primary:hover { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+.icon-btn:disabled {
+  background: var(--c-surface-alt);
+  border-color: var(--c-border);
+  color: var(--c-text-muted);
+  cursor: not-allowed;
+}
+.icon-btn.primary:disabled {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+.icon-btn.danger {
+  color: var(--c-danger-fg);
+  border-color: var(--c-danger-border);
+}
+.icon-btn.danger:hover { background: var(--c-danger-bg); }
+
+/* Empty state inside a results table */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--c-text-muted);
+}
+.empty-state-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background: var(--c-primary-soft);
+  display: grid;
+  place-items: center;
+  color: var(--c-primary);
+  font-size: 18px;
+}
+
+/* =====================================================================
+   Category selector (inline dropdown in upload/edit forms)
+   ===================================================================== */
+.cat-selector {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+.cat-trigger {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: var(--tap-min);
+}
+.cat-trigger:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-ring);
+}
+.cat-trigger-label { color: var(--c-text-muted); }
+.cat-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.1s ease-out;
+}
+.cat-options { max-height: 220px; overflow-y: auto; }
+.cat-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.1s;
+  gap: 0.5rem;
+}
+.cat-option:hover { background: var(--c-surface-alt); }
+.cat-option .cat-del-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--c-text-muted);
+  padding: 2px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.1s, background 0.1s;
+}
+.cat-option .cat-del-btn:hover { color: var(--c-danger-fg); background: var(--c-danger-bg); }
+.cat-add-row {
+  border-top: 1px solid var(--c-border-soft);
+  padding: 0.5rem;
+}
+.cat-add-btn {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--c-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background 0.1s;
+}
+.cat-add-btn:hover { background: var(--c-primary-soft); }
+.cat-add-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--c-primary);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+  box-shadow: 0 0 0 3px var(--c-primary-ring);
+}
+
+/* =====================================================================
+   Admin grid — 2 columns of cards
+   ===================================================================== */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+.admin-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.admin-card h2 {
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--c-border-soft);
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-card h2 svg { flex-shrink: 0; opacity: 0.6; }
+@media (max-width: 700px) {
+  .admin-grid { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   Modals (detail + edit)
+   ===================================================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  animation: backdropIn 0.15s ease-out;
+}
+@keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-panel {
+  position: relative;
+  width: min(1100px, 96vw);
+  height: min(92dvh, 860px);
+  background: var(--c-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: 1fr;
+  animation: panelIn 0.18s ease-out;
+}
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+.modal-panel-edit {
+  grid-template-columns: 1fr;
+  height: auto;
+  max-height: min(82vh, 720px);
+  width: min(560px, 96vw);
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover { background: var(--c-surface-alt); color: var(--c-text); }
+
+/* ----- Detail modal: sidebar + preview ----- */
+.detail-sidebar {
+  background: var(--c-surface-alt);
+  border-right: 1px solid var(--c-border);
+  overflow-y: auto;
+  /* Without min-height:0, the grid row is sized to the content and
+     overflow:auto never engages — long metadata gets silently clipped. */
+  min-height: 0;
+  scrollbar-gutter: stable;
+}
+.detail-sidebar-inner {
+  padding: 1.75rem 1.5rem;
+}
+.detail-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+  margin: 0 0 1.25rem;
+  word-break: break-word;
+}
+.detail-meta {
+  margin: 0 0 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+.detail-meta dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 0.25rem;
+}
+.detail-meta dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-text);
+  word-break: break-word;
+}
+.detail-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.detail-actions .icon-btn {
+  flex: 1 1 auto;
+}
+
+.detail-preview {
+  overflow: auto;
+  background: #f1f3f8;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.preview-host {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.preview-loading {
+  color: var(--c-text-muted);
+  font-style: italic;
+  margin: auto;
+}
+
+/* Images */
+.preview-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  background: #fff;
+}
+
+/* PDF.js */
+.preview-pdf {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.pdf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.pdf-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+.pdf-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.pdf-page-label {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pdf-canvas {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  max-width: 100%;
+  height: auto;
+}
+
+/* Generic download fallback */
+.preview-fallback {
+  margin: auto;
+  text-align: center;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--radius-md);
+  padding: 2rem 1.5rem;
+  max-width: 360px;
+  box-shadow: var(--shadow-sm);
+}
+.preview-fallback-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.85rem;
+  border-radius: 50%;
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+.preview-fallback p { margin: 0.25rem 0; }
+.preview-fallback .icon-btn { margin-top: 1rem; }
+
+/* ----- Edit modal ----- */
+.edit-modal-title {
+  margin: 0;
+  padding: 1.25rem 1.5rem 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+#edit-form {
+  padding: 0.5rem 1.5rem 1.5rem;
+  overflow-y: auto;
+}
+#edit-form label {
+  margin-top: 1rem;
+}
+.edit-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+.edit-modal-actions #edit-error {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+}
+
+/* ----- Title in results (inside clickable row) ----- */
+.title-link {
+  color: inherit;
+  font-weight: 600;
+}
+
+@media (max-width: 800px) {
+  .modal-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: 92vh;
+    max-height: 92vh;
+  }
+  .detail-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--c-border);
+    max-height: 40%;
+  }
+  .detail-sidebar-inner { padding: 1.25rem 1rem; }
+  .detail-preview {
+    min-height: 0;
+    flex: 1;
+  }
+}
+
+/* =====================================================================
+   Phone layout (≤640px). Android phones are typically 360–414dp wide;
+   we target up to 640px to also catch split-screen tablets in portrait.
+   ===================================================================== */
+@media (max-width: 640px) {
+  /* ----- App shell: sidebar is fully collapsed by default on phones,
+     taking no width. The floating hamburger (outside the sidebar, fixed
+     top-left) is the only visible element. ----- */
+  .app-shell {
+    grid-template-columns: 1fr;
+    transition: grid-template-columns 0.2s ease;
+  }
+  .app-shell:has(.sidebar.collapsed) {
+    grid-template-columns: 1fr;
+  }
+
+  /* When the sidebar is open on a phone, it slides out as a left drawer. */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: 0;
+    border-right: 0;
+    z-index: 30;
+    transition: width 0.2s ease;
+    box-shadow: none;
+  }
+  .sidebar:not(.collapsed) {
+    width: 220px;
+    border-right: 1px solid var(--c-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Sidebar user block: logout is already its own row; tidy up spacing. */
+  .sidebar-user {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    overflow: visible;
+  }
+  .sidebar-user-info {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .sidebar-logout {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 0.1rem;
+  }
+  .sidebar-logout .tab-label { display: inline; }
+
+  /* The floating hamburger stays top-left and works regardless of sidebar
+     state. Bump it down a bit so it clears the top browser bar. */
+  .sidebar-toggle {
+    top: 0.65rem;
+    left: 0.65rem;
+    z-index: 40;
+  }
+
+  /* Tighter outer padding for the content area. */
+  main { padding: 1rem 0.75rem 2rem; }
+
+  /* ----- Auth card: full-width on phones, with safe-area insets ----- */
+  .auth-body {
+    padding: 1rem;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .auth-card {
+    padding: 1.75rem 1.25rem;
+    width: 100%;
+  }
+
+  /* ----- Search bar: single column, bigger spacing -----
+     Date pickers on Android Chrome can be sluggish when narrow; giving
+     them a full row makes the native picker much easier to use. */
+  .search-bar {
+    grid-template-columns: 1fr;
+    grid-template-areas: "q" "cat" "tag" "from" "to" "sort";
+    padding: 0.75rem;
+    gap: 0.65rem;
+  }
+
+  /* ----- Results: kill the table, render as cards. -----
+     A 7-column table at 360px means each cell is ~50px wide — tags
+     and titles overflow, buttons wrap, and you can't tap a row without
+     hitting a button. Card view fixes all of that and gives each
+     document a comfortable tap target. */
+  .results thead { display: none; }
+  .results,
+  .results tbody,
+  .results tr,
+  .results td { display: block; width: auto; }
+  .results {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .results tbody tr {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 0.75rem;
+    padding: 0.85rem 1rem;
+  }
+  .results tbody tr:last-child { margin-bottom: 0; }
+  .results td {
+    padding: 0.25rem 0;
+    border-bottom: 0;
+  }
+  /* Inject field labels via data-label on mobile. search.js builds the
+     rows; we map each td to a label via :nth-child. */
+  .results td.title-cell {
+    font-size: 15px;
+    margin-bottom: 0.4rem;
+  }
+  .results td.title-cell::before,
+  .results td:nth-child(2)::before,
+  .results td:nth-child(3)::before,
+  .results td:nth-child(4)::before,
+  .results td:nth-child(5)::before,
+  .results td:nth-child(6)::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    margin-bottom: 0.15rem;
+  }
+  .results td.title-cell::before { content: ''; display: none; }
+  .results td.actions {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--c-border-soft);
+  }
+  .results td.actions .icon-btn {
+    flex: 1;
+    min-height: var(--tap-min);
+    font-size: 13px;
+  }
+  .results .actions { flex-wrap: wrap; }
+
+  /* ----- Admin grid -----
+     Already stacks at 700px; just tighten spacing on phones. */
+  .admin-card { padding: 1rem; }
+  .admin-card h2 { font-size: 0.85rem; }
+
+  /* ----- Modals: full-screen on phones, sidebar/preview stack vertically.
+     Override base .modal { display:grid } and .modal-panel { display:grid }
+     with flex so the detail modal's sidebar sits compact on top and the
+     preview fills all remaining space. The close button lives inside the
+     panel as a normal child so overflow clipping never hides it. ----- */
+  .modal:not([hidden]) {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .modal-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
+    /* No overflow:hidden — let children be visible; close button is
+       position:absolute relative to this panel, not fixed to viewport. */
+  }
+
+  /* Close button: absolute inside the panel, top-right corner */
+  .modal-close {
+    position: absolute !important;
+    top: 0.6rem !important;
+    right: 0.75rem !important;
+    z-index: 5 !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Detail modal: sidebar compact on top, preview fills remaining space */
+  .detail-sidebar {
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--c-border) !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-sidebar-inner {
+    padding: 1rem !important;
+  }
+  .detail-meta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem 1rem !important;
+  }
+  .detail-actions {
+    flex-wrap: wrap !important;
+  }
+
+  /* Preview takes ALL remaining space below the sidebar */
+  .detail-preview {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .preview-host {
+    flex: 1 !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Edit modal: full-screen single-column form */
+  .modal-panel-edit {
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .edit-modal-title { padding: 1rem 1rem 0.5rem !important; }
+  #edit-form { padding: 0.5rem 1rem 1.5rem !important; }
+  .edit-modal-actions { flex-wrap: wrap !important; }
+  .edit-modal-actions .icon-btn { flex: 1 !important; min-height: var(--tap-min) !important; }
+
+  /* ----- File inputs are awkward on mobile; give them a bit of room. */
+  input[type="file"] { font-size: 14px; }
+}
+
+.modal[hidden] { display: none !important; }
+
+/* Stop hover-only affordances from sticking under the finger on touch
+   devices (a tap on a "hover" background looks stuck until you tap
+   elsewhere). */
+@media (hover: none) {
+  .tab:hover,
+  .sidebar-toggle:hover,
+  .sidebar-logout:hover,
+  .icon-btn:hover { background: inherit; border-color: inherit; color: inherit; }
+  .results tbody tr:hover { background: var(--c-surface); }
+  .cat-option:hover { background: inherit; }
+}
